@@ -204,10 +204,10 @@ func TestPush_vars(t *testing.T) {
 	}
 
 	args := []string{
-		"-var-file", filepath.Join(testFixture("push-vars"), "vars.json"),
 		"-var", "name=foo/bar",
 		"-var", "one=two",
 		"-var", "overridden=yes",
+		"-var-file", filepath.Join(testFixture("push-vars"), "vars.json"),
 		filepath.Join(testFixture("push-vars"), "template.json"),
 	}
 	if code := c.Run(args); code != 0 {
