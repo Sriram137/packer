@@ -153,12 +153,13 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 				b.config.RunConfig.Comm.SSHPassword),
 		},
 		&common.StepProvision{},
-		&stepStopInstance{
+		&awscommon.StepStopEBSBackedInstance{
 			SpotPrice:           b.config.SpotPrice,
 			DisableStopInstance: b.config.DisableStopInstance,
 		},
-		// TODO(mitchellh): verify works with spots
-		&stepModifyInstance{},
+		&awscommon.StepModifyEBSBackedInstance{
+			EnableEnhancedNetworking: b.config.AMIEnhancedNetworking,
+		},
 		&awscommon.StepDeregisterAMI{
 			ForceDeregister: b.config.AMIForceDeregister,
 			AMIName:         b.config.AMIName,

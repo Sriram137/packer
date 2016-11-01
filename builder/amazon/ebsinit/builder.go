@@ -18,9 +18,6 @@ import (
 	"github.com/mitchellh/packer/template/interpolate"
 )
 
-// The unique ID for this builder
-const BuilderId = "mitchellh.amazonebsinit"
-
 type Config struct {
 	common.PackerConfig    `mapstructure:",squash"`
 	awscommon.AccessConfig `mapstructure:",squash"`
@@ -146,12 +143,13 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 				b.config.RunConfig.Comm.SSHPassword),
 		},
 		&common.StepProvision{},
-		&stepStopInstance{
+		&awscommon.StepStopEBSBackedInstance{
 			SpotPrice:           b.config.SpotPrice,
 			DisableStopInstance: b.config.DisableStopInstance,
 		},
-		// TODO(mitchellh): verify works with spots
-		&stepModifyInstance{},
+		&awscommon.StepModifyEBSBackedInstance{
+			EnableEnhancedNetworking: b.config.AMIEnhancedNetworking,
+		},
 	}
 
 	// Run!
