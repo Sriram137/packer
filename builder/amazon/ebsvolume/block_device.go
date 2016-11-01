@@ -1,4 +1,4 @@
-package ebsinit
+package ebsvolume
 
 import (
 	awscommon "github.com/mitchellh/packer/builder/amazon/common"

@@ -1,4 +1,4 @@
-package ebsinit
+package ebsvolume
 
 import (
 	"fmt"

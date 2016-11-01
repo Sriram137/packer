@@ -1,6 +1,6 @@
-// The ebsinit package contains a packer.Builder implementation that
+// The ebsvolume package contains a packer.Builder implementation that
 // builds EBS volumes for Amazon EC2 using an ephemeral instance,
-package ebsinit
+package ebsvolume
 
 import (
 	"fmt"
