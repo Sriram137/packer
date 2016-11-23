@@ -4,6 +4,7 @@ import (
 	"github.com/elricL/oracle_bmc_sdk"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/common"
+	"github.com/mitchellh/packer/helper/config"
 	"github.com/mitchellh/packer/packer"
 	"github.com/mitchellh/packer/template/interpolate"
 	"log"
@@ -20,30 +21,46 @@ type Config struct {
 }
 
 type ImageConfig struct {
-	imageDisplayName string `mapstructure:"image_name"`
+	ImageDisplayName string `mapstructure:"image_name"`
 }
 
 type OracleConfig struct {
-	compartmentId      string `mapstructure:"compartmentId"`
-	userId             string `mapstructure:"userId"`
-	fingerprint        string `mapstructure:"fingerprint"`
-	privateKeyContents string `mapstructure:"privateKeyContents"`
-	tenantId           string `mapstructure:"tenantId"`
+	CompartmentId      string `mapstructure:"compartmentId"`
+	UserId             string `mapstructure:"userId"`
+	Fingerprint        string `mapstructure:"fingerprint"`
+	PrivateKeyContents string `mapstructure:"privateKeyContents"`
+	TenantId           string `mapstructure:"tenantId"`
 }
 
 type InstanceConfig struct {
-	baseImageId        string `mapstructure:"baseImageId"`
-	availabilityDomain string `mapstructure:"availabilityDomain"`
-	subnetId           string `mapstructure:"subnetId"`
-	shape              string `mapstructure:"shape"`
+	BaseImageId        string `mapstructure:"baseImageId"`
+	AvailabilityDomain string `mapstructure:"availabilityDomain"`
+	SubnetId           string `mapstructure:"subnetId"`
+	Shape              string `mapstructure:"shape"`
 }
 
 type Builder struct {
-	config Config
+	config *Config
 	runner multistep.Runner
 }
 
 func (b *Builder) Prepare(raws ...interface{}) ([]string, error) {
+	err := config.Decode(&b.config, &config.DecodeOpts{
+		Interpolate:        true,
+		InterpolateContext: &b.config.ctx,
+	}, raws...)
+	if err != nil {
+		return nil, err
+	}
+	//decoded_str, err := strconv.Unquote(b.config.PrivateKeyContents)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//a, _ := ioutil.ReadFile("/Users/sriramg/.ssh/id_rsa.pub")
+	//log.Println("&&&&&&&&&&&&&&&&")
+	//log.Println(a)
+	//log.Println("****************")
+	//b.config.PrivateKeyContents = decoded_str
 	return nil, nil
 }
 
@@ -57,7 +74,7 @@ func (b *Builder) Cancel() {
 func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packer.Artifact, error) {
 	config := b.config
 
-	oracleConfig := oraclebmc_sdk.NewConfig(config.userId, config.tenantId, config.fingerprint, config.privateKeyContents)
+	oracleConfig := oraclebmc_sdk.NewConfig(config.UserId, config.TenantId, config.Fingerprint, config.PrivateKeyContents)
 
 	computeApi := oraclebmc_sdk.ComputeApi{Config: oracleConfig}
 
@@ -70,15 +87,15 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 
 	steps := []multistep.Step{
 		&StepCreateInstance{
-			availablityZone: config.availabilityDomain,
-			baseImageId:     config.baseImageId,
-			compartmentId:   config.availabilityDomain,
-			shape:           config.shape,
-			subnetId:        config.subnetId,
+			availablityZone: config.AvailabilityDomain,
+			baseImageId:     config.BaseImageId,
+			compartmentId:   config.AvailabilityDomain,
+			shape:           config.Shape,
+			subnetId:        config.SubnetId,
 		},
 		&StepCreateImage{
-			DisplayName:   config.imageDisplayName,
-			CompartmentId: config.compartmentId,
+			DisplayName:   config.ImageDisplayName,
+			CompartmentId: config.CompartmentId,
 		},
 		&StepTerminateInstance{},
 	}

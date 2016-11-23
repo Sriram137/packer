@@ -29,9 +29,15 @@ func (s *StepCreateInstance) Run(state multistep.StateBag) multistep.StepAction 
 		Shape:              s.shape,
 		SubnetId:           s.subnetId}
 	ui.Say("Starting instance creation")
+	ui.Say(fmt.Sprintf("%#v", input))
+	ui.Say(fmt.Sprintf("%#v", computeApi.Config))
 	instance, err := computeApi.CreateInstance(input)
 	if err != nil {
 		ui.Say(fmt.Sprintf("Encountered error: %s", err))
+		return multistep.ActionHalt
+	}
+	if instance.Id == "" {
+		ui.Say("Empty instance Id")
 		return multistep.ActionHalt
 	}
 	ui.Say(instance.Id)
