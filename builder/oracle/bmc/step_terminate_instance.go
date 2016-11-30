@@ -14,7 +14,7 @@ func (s *StepTerminateInstance) Run(state multistep.StateBag) multistep.StepActi
 	ui := state.Get("ui").(packer.Ui)
 
 	computeApi := state.Get("api").(oraclebmc_sdk.ComputeApi)
-	instance := state.Get("image").(*oraclebmc_sdk.Instance)
+	instance := state.Get("instance").(*oraclebmc_sdk.Instance)
 
 	ui.Say("Starting instance creation")
 	err := computeApi.TerminateInstance(instance)

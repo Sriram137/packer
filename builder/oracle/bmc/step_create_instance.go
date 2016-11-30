@@ -1,10 +1,15 @@
 package oracle
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"github.com/elricL/oracle_bmc_sdk"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
+	"golang.org/x/crypto/ssh"
 )
 
 type StepCreateInstance struct {
@@ -20,12 +25,16 @@ func (s *StepCreateInstance) Run(state multistep.StateBag) multistep.StepAction 
 
 	computeApi := state.Get("api").(oraclebmc_sdk.ComputeApi)
 
+	priv, publ := createPrivatePublicPair()
+
+	state.Put("priv_key", priv)
+
 	input := &oraclebmc_sdk.LaunchInstanceInput{
 		CompartmentId:      s.compartmentId,
 		AvailabilityDomain: s.availablityZone,
 		DisplayName:        "packerCreateMachine",
 		ImageId:            s.baseImageId,
-		Metadata:           map[string]string{},
+		Metadata:           map[string]string{"ssh_authorized_keys": publ},
 		Shape:              s.shape,
 		SubnetId:           s.subnetId}
 	ui.Say("Starting instance creation")
@@ -49,6 +58,26 @@ func (s *StepCreateInstance) Run(state multistep.StateBag) multistep.StepAction 
 	}
 	state.Put("instance", instance)
 	return multistep.ActionContinue
+}
+
+func createPrivatePublicPair() (string, string) {
+	priv, _ := rsa.GenerateKey(rand.Reader, 2014)
+
+	// ASN.1 DER encoded form
+	priv_der := x509.MarshalPKCS1PrivateKey(priv)
+	priv_blk := pem.Block{
+		Type:    "RSA PRIVATE KEY",
+		Headers: nil,
+		Bytes:   priv_der,
+	}
+	// Set the private key in the statebag for later
+	privateKey := string(pem.EncodeToMemory(&priv_blk))
+
+	// Marshal the public key into SSH compatible format
+	// TODO properly handle the public key error
+	pub, _ := ssh.NewPublicKey(&priv.PublicKey)
+	pub_sshformat := string(ssh.MarshalAuthorizedKey(pub))
+	return privateKey, pub_sshformat
 }
 
 func (s *StepCreateInstance) Cleanup(multistep.StateBag) {}

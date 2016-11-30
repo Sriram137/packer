@@ -4,6 +4,7 @@ import (
 	"github.com/elricL/oracle_bmc_sdk"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/common"
+	"github.com/mitchellh/packer/helper/communicator"
 	"github.com/mitchellh/packer/helper/config"
 	"github.com/mitchellh/packer/packer"
 	"github.com/mitchellh/packer/template/interpolate"
@@ -17,6 +18,7 @@ type Config struct {
 	ImageConfig         `mapstructure:",squash"`
 	OracleConfig        `mapstructure:",squash"`
 	InstanceConfig      `mapstructure:",squash"`
+	Comm                communicator.Config `mapstructure:",squash"`
 	ctx                 interpolate.Context
 }
 
@@ -40,7 +42,7 @@ type InstanceConfig struct {
 }
 
 type Builder struct {
-	config *Config
+	config Config
 	runner multistep.Runner
 }
 
@@ -52,15 +54,17 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	//decoded_str, err := strconv.Unquote(b.config.PrivateKeyContents)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//a, _ := ioutil.ReadFile("/Users/sriramg/.ssh/id_rsa.pub")
-	//log.Println("&&&&&&&&&&&&&&&&")
-	//log.Println(a)
-	//log.Println("****************")
-	//b.config.PrivateKeyContents = decoded_str
+	c := &b.config
+	if c.Comm.SSHUsername == "" {
+		c.Comm.SSHUsername = "opc"
+	}
+	var errs *packer.MultiError
+	if es := c.Comm.Prepare(&c.ctx); len(es) > 0 {
+		errs = packer.MultiErrorAppend(errs, es...)
+	}
+	if errs != nil && len(errs.Errors) > 0 {
+		return nil, errs
+	}
 	return nil, nil
 }
 
@@ -89,10 +93,16 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 		&StepCreateInstance{
 			availablityZone: config.AvailabilityDomain,
 			baseImageId:     config.BaseImageId,
-			compartmentId:   config.AvailabilityDomain,
+			compartmentId:   config.CompartmentId,
 			shape:           config.Shape,
 			subnetId:        config.SubnetId,
 		},
+		&communicator.StepConnect{
+			Config:    &b.config.Comm,
+			Host:      commHost,
+			SSHConfig: sshConfig,
+		},
+		&StepProvision{},
 		&StepCreateImage{
 			DisplayName:   config.ImageDisplayName,
 			CompartmentId: config.CompartmentId,
@@ -102,6 +112,11 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 
 	b.runner = common.NewRunner(steps, b.config.PackerConfig, ui)
 	b.runner.Run(state)
+
+	if rawErr, ok := state.GetOk("error"); ok {
+		return nil, rawErr.(error)
+	}
+
 	image := state.Get("image").(*oraclebmc_sdk.Image)
 
 	artifact := &ImageArtifact{
