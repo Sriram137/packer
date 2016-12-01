@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/elricL/oracle_bmc_sdk"
 	"github.com/mitchellh/multistep"
-	"golang.org/x/crypto/ssh"
 	"github.com/mitchellh/packer/packer"
+	"golang.org/x/crypto/ssh"
 )
 
 func commHost(state multistep.StateBag) (string, error) {
@@ -28,7 +28,7 @@ func commHost(state multistep.StateBag) (string, error) {
 }
 
 func sshConfig(state multistep.StateBag) (*ssh.ClientConfig, error) {
-	config := state.Get("config").(Config)
+	config := state.Get("config").(*Config)
 	privateKey := state.Get("privateKey").(string)
 
 	signer, err := ssh.ParsePrivateKey([]byte(privateKey))

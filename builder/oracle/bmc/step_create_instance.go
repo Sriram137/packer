@@ -27,7 +27,7 @@ func (s *StepCreateInstance) Run(state multistep.StateBag) multistep.StepAction 
 
 	priv, publ := createPrivatePublicPair()
 
-	state.Put("priv_key", priv)
+	state.Put("privateKey", priv)
 
 	input := &oraclebmc_sdk.LaunchInstanceInput{
 		CompartmentId:      s.compartmentId,
