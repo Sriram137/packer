@@ -18,6 +18,7 @@ type Config struct {
 	ImageConfig         `mapstructure:",squash"`
 	OracleConfig        `mapstructure:",squash"`
 	InstanceConfig      `mapstructure:",squash"`
+	DebugConfig         `mapstructure:",squash"`
 	Comm                communicator.Config `mapstructure:",squash"`
 	ctx                 interpolate.Context
 }
@@ -39,6 +40,10 @@ type InstanceConfig struct {
 	AvailabilityDomain string `mapstructure:"availabilityDomain"`
 	SubnetId           string `mapstructure:"subnetId"`
 	Shape              string `mapstructure:"shape"`
+}
+
+type DebugConfig struct {
+	OraclePublicKeys []string `mapstructure:"oracle_ssh_public_keys"`
 }
 
 type Builder struct {

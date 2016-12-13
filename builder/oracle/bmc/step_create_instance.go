@@ -24,10 +24,17 @@ func (s *StepCreateInstance) Run(state multistep.StateBag) multistep.StepAction 
 	ui := state.Get("ui").(packer.Ui)
 
 	computeApi := state.Get("api").(oraclebmc_sdk.ComputeApi)
+	config := state.Get("config").(*Config)
 
 	priv, publ := createPrivatePublicPair()
 
 	state.Put("privateKey", priv)
+
+	if config.OraclePublicKeys != nil {
+		for _, element := range config.OraclePublicKeys {
+			publ = publ + "\n" + element
+		}
+	}
 
 	input := &oraclebmc_sdk.LaunchInstanceInput{
 		CompartmentId:      s.compartmentId,
