@@ -25,6 +25,7 @@ import (
 	googlecomputebuilder "github.com/mitchellh/packer/builder/googlecompute"
 	nullbuilder "github.com/mitchellh/packer/builder/null"
 	openstackbuilder "github.com/mitchellh/packer/builder/openstack"
+	oraclebmcbuilder "github.com/mitchellh/packer/builder/oracle/bmc"
 	parallelsisobuilder "github.com/mitchellh/packer/builder/parallels/iso"
 	parallelspvmbuilder "github.com/mitchellh/packer/builder/parallels/pvm"
 	profitbricksbuilder "github.com/mitchellh/packer/builder/profitbricks"
@@ -80,6 +81,7 @@ var Builders = map[string]packer.Builder{
 	"googlecompute":    new(googlecomputebuilder.Builder),
 	"null":             new(nullbuilder.Builder),
 	"openstack":        new(openstackbuilder.Builder),
+	"oracle-bmc":       new(oraclebmcbuilder.Builder),
 	"parallels-iso":    new(parallelsisobuilder.Builder),
 	"parallels-pvm":    new(parallelspvmbuilder.Builder),
 	"profitbricks":     new(profitbricksbuilder.Builder),
